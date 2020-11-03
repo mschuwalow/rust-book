@@ -1,0 +1,50 @@
+{
+    "naersk": {
+        "branch": "master",
+        "description": "Build rust crates in Nix. No configuration, no code generation, no IFD. Sandbox friendly.",
+        "homepage": "",
+        "owner": "nmattia",
+        "repo": "naersk",
+        "rev": "d645515b7159c75087b3d51f23a68047c2c09699",
+        "sha256": "16hjyf1nkvwhb5nw989qhm3gdlim5wfw515bnvxpix5ff8jfbh9x",
+        "type": "tarball",
+        "url": "https://github.com/nmattia/naersk/archive/d645515b7159c75087b3d51f23a68047c2c09699.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "niv": {
+        "branch": "master",
+        "description": "Easy dependency management for Nix projects",
+        "homepage": "https://github.com/nmattia/niv",
+        "owner": "nmattia",
+        "repo": "niv",
+        "rev": "20c899271f288d33114760bc298838575fc6c7f9",
+        "sha256": "07zswk6dhlydihl9g6skmy52grjvqpra8r98f2dmbgwzc1yhjhxq",
+        "type": "tarball",
+        "url": "https://github.com/nmattia/niv/archive/20c899271f288d33114760bc298838575fc6c7f9.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "nixpkgs": {
+        "branch": "release-20.03",
+        "description": "Nix Packages collection",
+        "homepage": "",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "fbd345dd005222eed9cf27d724cc7abdd54c048f",
+        "sha256": "0dv8g49x9db9x3swpg30aq146jnf4p47fvclyhs9h22986r1waj0",
+        "type": "tarball",
+        "url": "https://github.com/NixOS/nixpkgs/archive/fbd345dd005222eed9cf27d724cc7abdd54c048f.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "nixpkgs-mozilla": {
+        "branch": "master",
+        "description": "mozilla related nixpkgs (extends nixos/nixpkgs repo)",
+        "homepage": null,
+        "owner": "mozilla",
+        "repo": "nixpkgs-mozilla",
+        "rev": "8c007b60731c07dd7a052cce508de3bb1ae849b4",
+        "sha256": "1zybp62zz0h077zm2zmqs2wcg3whg6jqaah9hcl1gv4x8af4zhs6",
+        "type": "tarball",
+        "url": "https://github.com/mozilla/nixpkgs-mozilla/archive/8c007b60731c07dd7a052cce508de3bb1ae849b4.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    }
+}
