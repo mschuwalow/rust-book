@@ -22,6 +22,11 @@ let
       remapPathPrefix = true;
     };
 in {
-  guessing-game = mkRustPackage ./guessing-game;
-  helloworld = mkRustPackage ./helloworld;
+  ch2-guessing-game = mkRustPackage ./ch2/guessing-game;
+  ch2-helloworld = mkRustPackage ./ch2/helloworld;
+  ch3-branches = mkRustPackage ./ch3/branches;
+  ch3-functions = mkRustPackage ./ch3/functions;
+  ch3-fibonacci = mkRustPackage ./ch3/fibonacci;
+  ch3-loops = mkRustPackage ./ch3/loops;
+  ch3-variables = mkRustPackage ./ch3/variables;
 }
