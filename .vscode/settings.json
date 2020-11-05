@@ -10,6 +10,8 @@
     "ch3/variables/Cargo.toml",
     "ch4/Cargo.toml",
     "ch5/examples/Cargo.toml",
-    "ch5/rectangles/Cargo.toml"
+    "ch5/rectangles/Cargo.toml",
+    "ch7/communicator/Cargo.toml",
+    "ch7/privacy/Cargo.toml"
   ]
 }
