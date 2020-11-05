@@ -7,6 +7,9 @@
     "ch3/fibonacci/Cargo.toml",
     "ch3/functions/Cargo.toml",
     "ch3/loops/Cargo.toml",
-    "ch3/variables/Cargo.toml"
+    "ch3/variables/Cargo.toml",
+    "ch4/Cargo.toml",
+    "ch5/examples/Cargo.toml",
+    "ch5/rectangles/Cargo.toml"
   ]
 }

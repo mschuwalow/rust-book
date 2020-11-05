@@ -29,4 +29,7 @@ in {
   ch3-fibonacci = mkRustPackage ./ch3/fibonacci;
   ch3-loops = mkRustPackage ./ch3/loops;
   ch3-variables = mkRustPackage ./ch3/variables;
+  ch4 = mkRustPackage ./ch4;
+  ch5-examples = mkRustPackage ./ch5/examples;
+  ch5-rectangles = mkRustPackage ./ch5/rectangles;
 }
