@@ -34,5 +34,6 @@ in {
   ch5-rectangles = mkRustPackage ./ch5/rectangles;
   ch7-communicator = mkRustPackage ./ch7/communicator;
   ch7-privacy = mkRustPackage ./ch7/privacy;
-  ch8 = mkRustPackage ./ch8;
+  ch8-chapter = mkRustPackage ./ch8/chapter;
+  ch8-department = mkRustPackage ./ch8/department;
 }

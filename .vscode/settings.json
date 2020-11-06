@@ -13,6 +13,7 @@
     "ch5/rectangles/Cargo.toml",
     "ch7/communicator/Cargo.toml",
     "ch7/privacy/Cargo.toml",
-    "ch8/Cargo.toml"
+    "ch8/chapter/Cargo.toml",
+    "ch8/department/Cargo.toml"
   ]
 }
