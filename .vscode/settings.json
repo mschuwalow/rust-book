@@ -12,6 +12,7 @@
     "ch5/examples/Cargo.toml",
     "ch5/rectangles/Cargo.toml",
     "ch7/communicator/Cargo.toml",
-    "ch7/privacy/Cargo.toml"
+    "ch7/privacy/Cargo.toml",
+    "ch8/Cargo.toml"
   ]
 }
