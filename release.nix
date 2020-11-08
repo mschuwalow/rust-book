@@ -38,4 +38,5 @@ in {
   ch8-department = mkRustPackage ./ch8/department;
   ch9-chapter = mkRustPackage ./ch9/chapter;
   ch10-chapter = mkRustPackage ./ch10/chapter;
+  ch11-adder = mkRustPackage ./ch11/adder;
 }
