@@ -1,6 +1,4 @@
-use department::runner::Runner;
-use department::term::*;
-
+use department::{runner::Runner, term::*};
 fn main() {
     let mut runner = Runner::new();
     println!("Listening for commands:\n");
@@ -9,11 +7,17 @@ fn main() {
             Ok(cmd) => match cmd {
                 Command::AddUser { user, department } => {
                     runner.add_user(&department, &user);
-                    println!("==> Added user {} to department {}.", user, department);
+                    println!(
+                        "==> Added user {} to department {}.",
+                        user, department
+                    );
                 }
                 Command::ListAllInDepartment { department } => {
                     let users = runner.list_all_users_in_dep(&department);
-                    println!("==> Users in department {}: {:?}", department, users);
+                    println!(
+                        "==> Users in department {}: {:?}",
+                        department, users
+                    );
                 }
                 Command::ListAll() => {
                     let users = runner.list_all_users();

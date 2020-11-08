@@ -7,7 +7,6 @@ fn first_word(s: &str) -> &str {
     }
     &s[..]
 }
-
 fn main() {
     let my_string = String::from("hello_world");
     first_word(&my_string[..]);

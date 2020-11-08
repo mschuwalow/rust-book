@@ -36,4 +36,6 @@ in {
   ch7-privacy = mkRustPackage ./ch7/privacy;
   ch8-chapter = mkRustPackage ./ch8/chapter;
   ch8-department = mkRustPackage ./ch8/department;
+  ch9-chapter = mkRustPackage ./ch9/chapter;
+  ch10-chapter = mkRustPackage ./ch10/chapter;
 }

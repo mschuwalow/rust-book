@@ -1,18 +1,11 @@
 extern crate num_bigint as bigint;
-
 use bigint::BigUint;
-use std::error;
-use std::fmt;
-use std::io;
-use std::io::Write;
-use std::num::ParseIntError;
-
+use std::{error, fmt, io, io::Write, num::ParseIntError};
 #[derive(Debug)]
 enum ReadError {
     Os(io::Error),
     Parse(ParseIntError),
 }
-
 impl fmt::Display for ReadError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
@@ -21,7 +14,6 @@ impl fmt::Display for ReadError {
         }
     }
 }
-
 impl error::Error for ReadError {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match *self {
@@ -30,19 +22,16 @@ impl error::Error for ReadError {
         }
     }
 }
-
 impl From<io::Error> for ReadError {
     fn from(err: io::Error) -> Self {
         ReadError::Os(err)
     }
 }
-
 impl From<ParseIntError> for ReadError {
     fn from(err: ParseIntError) -> Self {
         ReadError::Parse(err)
     }
 }
-
 fn read_num() -> Result<u32, ReadError> {
     print!("Please enter a number: ");
     io::stdout().flush()?;
@@ -51,7 +40,6 @@ fn read_num() -> Result<u32, ReadError> {
     let num = buffer.trim().parse()?;
     Ok(num)
 }
-
 pub fn fibonacci(n: u32) -> BigUint {
     fn go(n: u32, last: BigUint, penultimate: BigUint) -> BigUint {
         match n {
@@ -65,7 +53,6 @@ pub fn fibonacci(n: u32) -> BigUint {
     }
     go(n, BigUint::from(1_u8), BigUint::from(0_u8))
 }
-
 fn main() {
     match read_num() {
         Ok(number) => {

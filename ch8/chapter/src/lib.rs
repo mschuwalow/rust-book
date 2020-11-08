@@ -1,7 +1,6 @@
 mod exercises;
 mod maps;
 mod strings;
-
 #[cfg(test)]
 mod tests {
     #[test]

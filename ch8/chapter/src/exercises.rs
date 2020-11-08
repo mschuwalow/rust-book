@@ -1,13 +1,11 @@
 use std::collections::HashMap;
-
 #[test]
 fn exc_1() {
     struct Stats {
-        mean: f64,
+        mean:   f64,
         median: Option<f64>,
-        mode: Option<i32>,
+        mode:   Option<i32>,
     }
-
     fn calculate_stats(mut values: Vec<i32>) -> Stats {
         let mut mean = 0.0;
         let mut map = HashMap::new();
@@ -15,10 +13,8 @@ fn exc_1() {
         for (i, x) in values.iter().enumerate() {
             let mut entry = map.entry(x).or_insert(0);
             *entry += 1;
-
             mean += ((*x as f64 - mean) / (i + 1) as f64);
         }
-
         let median = {
             match values.len() {
                 0 => None,
@@ -32,21 +28,17 @@ fn exc_1() {
                 }
             }
         };
-
         let mode = map
             .into_iter()
             .max_by(|a, b| a.1.cmp(&b.1))
             .map(|(k, _)| *k);
-
         Stats { mean, median, mode }
     }
-
     assert_eq!(calculate_stats(vec![1, 2, 3, 4, 5]).mean, 3.0);
     assert_eq!(calculate_stats(vec![1, 2, 2, 3, 4, 5]).mode, Some(2));
     assert_eq!(calculate_stats(vec![1, 2, 3, 4, 5]).median, Some(3.0));
     assert_eq!(calculate_stats(vec![1, 2, 3, 4, 4, 5]).median, Some(3.5));
 }
-
 fn exc_2() {
     fn pig_latin(str: &str) -> Option<String> {
         let lowercase = str.to_lowercase();
