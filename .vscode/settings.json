@@ -17,6 +17,7 @@
     "ch8/department/Cargo.toml",
     "ch9/chapter/Cargo.toml",
     "ch10/chapter/Cargo.toml",
-    "ch11/adder/Cargo.toml"
+    "ch11/adder/Cargo.toml",
+    "ch12/minigrep/Cargo.toml"
   ]
 }
