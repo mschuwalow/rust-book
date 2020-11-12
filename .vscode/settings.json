@@ -21,6 +21,7 @@
     "ch12/minigrep/Cargo.toml",
     "ch13/chapter/Cargo.toml",
     "ch14/chapter/Cargo.toml",
-    "ch14/workspace/Cargo.toml"
+    "ch14/workspace/Cargo.toml",
+    "ch15/chapter/Cargo.toml"
   ]
 }

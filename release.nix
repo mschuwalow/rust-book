@@ -42,4 +42,5 @@ in {
   ch12-minigrep = mkRustPackage ./ch12/minigrep;
   ch13-chapter = mkRustPackage ./ch13/chapter;
   ch14-chapter = mkRustPackage ./ch14/chapter;
+  ch15-chapter = mkRustPackage ./ch15/chapter;
 }
