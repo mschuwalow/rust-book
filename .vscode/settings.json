@@ -23,6 +23,9 @@
     "ch14/chapter/Cargo.toml",
     "ch14/workspace/Cargo.toml",
     "ch15/chapter/Cargo.toml",
-    "ch16/chapter/Cargo.toml"
+    "ch16/chapter/Cargo.toml",
+    "ch17/gui/Cargo.toml",
+    "ch17/blog/Cargo.toml",
+    "ch17/blog-2/Cargo.toml"
   ]
 }
