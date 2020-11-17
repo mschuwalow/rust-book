@@ -27,6 +27,7 @@
     "ch17/gui/Cargo.toml",
     "ch17/blog/Cargo.toml",
     "ch17/blog-2/Cargo.toml",
-    "ch18/chapter/Cargo.toml"
+    "ch18/chapter/Cargo.toml",
+    "ch19/chapter/Cargo.toml"
   ]
 }
