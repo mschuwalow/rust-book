@@ -8,6 +8,7 @@ mod hkt_1;
 mod hkt_2;
 mod hkt_3;
 mod hkt_4;
+mod hkt_5;
 mod unsafe_powers;
 
 #[cfg(test)]
