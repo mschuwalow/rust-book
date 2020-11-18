@@ -104,27 +104,22 @@ impl<'a, A: 'a, E: 'a> Mirror<'a, A> for Result<A, E> {
         self
     }
 }
-// impl<E: 'static> Functor for ResultFamily<E> {
-//     fn fmap<'a, A: 'a, B: 'a, F: FnMut(A) -> B + 'a>(
-//         fa: Result<A, E>,
-//         f: F,
-//     ) -> Result<B, E> {
-//         fa.map(f)
-//     }
-// }
-// impl<E: 'static> Applicative for ResultFamily<E> {
-//     fn pure<'a, A: 'a>(a: A) -> Result<A, E> {
-//         Ok(a)
-//     }
+impl<'a, E: 'a> Functor<'a> for ResultFamily<'a, E> {
+    fn fmap<A, B, F: FnMut(A) -> B>(fa: Result<A, E>, f: F) -> Result<B, E> {
+        fa.map(f)
+    }
+}
+impl<'a, E: 'a> Applicative<'a> for ResultFamily<'a, E> {
+    fn pure<A>(a: A) -> Result<A, E> {
+        Ok(a)
+    }
 
-//     fn zip<'a, A: 'a, B: 'a>(
-//         fa: Result<A, E>,
-//         fb: Result<B, E>,
-//     ) -> Result<(A, B), E> {
-//         fa.and_then(|a| fb.map(|b| (a, b)))
-//     }
-// }
+    fn zip<A, B>(fa: Result<A, E>, fb: Result<B, E>) -> Result<(A, B), E> {
+        fa.and_then(|a| fb.map(|b| (a, b)))
+    }
+}
 
+// iterator
 struct IteratorWrap<'a, T: Sized>(Box<dyn Iterator<Item = T> + 'a>);
 trait IteratorSyntax<'a, T>: Iterator<Item = T> + Sized + 'a {
     fn wrap(self) -> IteratorWrap<'a, T> {
@@ -179,10 +174,7 @@ impl<'a> Applicative<'a> for IteratorWrapFamily {
     }
 }
 
-fn use_applicative<'a, A: 'a, F: Applicative<'a>>(
-    a: A,
-    b: A,
-) -> F::Member<(A, A)> {
+fn use_applicative<'a, A, F: Applicative<'a>>(a: A, b: A) -> F::Member<(A, A)> {
     let fa = pure::<F, _>(a);
     let fb = pure::<F, _>(b);
     fa.zip(fb)
