@@ -1,60 +1,60 @@
 use std::marker::PhantomData;
 
-trait Family {
-    type Member<'a, T: 'a>: Mirror<'a, T, Family = Self>;
+trait Family<'a> {
+    type Member<T: 'a>: Mirror<'a, T, Family = Self>;
 }
 trait Mirror<'a, T> {
-    type Family: Family;
-    fn as_member(self) -> <Self::Family as Family>::Member<'a, T>;
+    type Family: Family<'a>;
+    fn as_member(self) -> <Self::Family as Family<'a>>::Member<T>;
 }
 
-trait Functor: Family {
-    fn fmap<'a, A: 'a, B: 'a, F: FnMut(A) -> B + 'a>(
-        fa: <Self as Family>::Member<'a, A>,
+trait Functor<'a>: Family<'a> {
+    fn fmap<A: 'a, B: 'a, F: FnMut(A) -> B + 'a>(
+        fa: <Self as Family<'a>>::Member<A>,
         f: F,
-    ) -> <Self as Family>::Member<'a, B>;
+    ) -> <Self as Family<'a>>::Member<B>;
 }
 
-trait FunctorSyntax<'a, A: 'a, Fam: Functor>:
+trait FunctorSyntax<'a, A: 'a, Fam: Functor<'a>>:
     Mirror<'a, A, Family = Fam> + Sized
 {
     fn fmap<B, F: FnMut(A) -> B + 'a>(
         self,
         f: F,
-    ) -> <Fam as Family>::Member<'a, B> {
+    ) -> <Fam as Family<'a>>::Member<B> {
         <Fam as Functor>::fmap(self.as_member(), f)
     }
 }
 
-impl<'a, A: 'a, F: Functor, T: Mirror<'a, A, Family = F>>
+impl<'a, A: 'a, F: Functor<'a>, T: Mirror<'a, A, Family = F>>
     FunctorSyntax<'a, A, F> for T
 {
 }
 
-trait Applicative: Functor {
-    fn pure<'a, A: 'a>(a: A) -> <Self as Family>::Member<'a, A>;
-    fn zip<'a, A: 'a, B: 'a>(
-        fa: <Self as Family>::Member<'a, A>,
-        fb: <Self as Family>::Member<'a, B>,
-    ) -> <Self as Family>::Member<'a, (A, B)>;
+trait Applicative<'a>: Functor<'a> {
+    fn pure<A: 'a>(a: A) -> <Self as Family<'a>>::Member<A>;
+    fn zip<A: 'a, B: 'a>(
+        fa: <Self as Family<'a>>::Member<A>,
+        fb: <Self as Family<'a>>::Member<B>,
+    ) -> <Self as Family<'a>>::Member<(A, B)>;
 }
 
-fn pure<'a, F: Applicative, A: 'a>(a: A) -> F::Member<'a, A> {
+fn pure<'a, F: Applicative<'a>, A: 'a>(a: A) -> F::Member<A> {
     <F as Applicative>::pure(a)
 }
 
-trait ApplicativeSyntax<'a, A: 'a, Fam: Applicative>:
+trait ApplicativeSyntax<'a, A: 'a, Fam: Applicative<'a>>:
     Mirror<'a, A, Family = Fam> + Sized
 {
     fn zip<B: 'a>(
         self,
-        fb: <Fam as Family>::Member<'a, B>,
-    ) -> <Fam as Family>::Member<'a, (A, B)> {
+        fb: <Fam as Family<'a>>::Member<B>,
+    ) -> <Fam as Family<'a>>::Member<(A, B)> {
         <Fam as Applicative>::zip(self.as_member(), fb)
     }
 }
 
-impl<'a, A: 'a, F: Applicative, T: Mirror<'a, A, Family = F>>
+impl<'a, A: 'a, F: Applicative<'a>, T: Mirror<'a, A, Family = F>>
     ApplicativeSyntax<'a, A, F> for T
 {
 }
@@ -62,8 +62,8 @@ impl<'a, A: 'a, F: Applicative, T: Mirror<'a, A, Family = F>>
 // usage
 
 struct OptionFamily;
-impl Family for OptionFamily {
-    type Member<'a, T: 'a> = Option<T>;
+impl<'a> Family<'a> for OptionFamily {
+    type Member<T: 'a> = Option<T>;
 }
 impl<'a, A: 'a> Mirror<'a, A> for Option<A> {
     type Family = OptionFamily;
@@ -72,20 +72,17 @@ impl<'a, A: 'a> Mirror<'a, A> for Option<A> {
         self
     }
 }
-impl Functor for OptionFamily {
-    fn fmap<'a, A: 'a, B: 'a, F: FnMut(A) -> B + 'a>(
-        fa: Option<A>,
-        f: F,
-    ) -> Option<B> {
+impl<'a> Functor<'a> for OptionFamily {
+    fn fmap<A, B, F: FnMut(A) -> B>(fa: Option<A>, f: F) -> Option<B> {
         fa.map(f)
     }
 }
-impl Applicative for OptionFamily {
-    fn pure<'a, A: 'a>(a: A) -> Option<A> {
+impl<'a> Applicative<'a> for OptionFamily {
+    fn pure<A>(a: A) -> Option<A> {
         Some(a)
     }
 
-    fn zip<'a, A: 'a, B: 'a>(fa: Option<A>, fb: Option<B>) -> Option<(A, B)> {
+    fn zip<A, B>(fa: Option<A>, fb: Option<B>) -> Option<(A, B)> {
         match (fa, fb) {
             (Some(a), Some(b)) => Some((a, b)),
             _ => None,
@@ -94,39 +91,39 @@ impl Applicative for OptionFamily {
 }
 
 // Result
-struct ResultFamily<E> {
-    phantom: PhantomData<E>,
+struct ResultFamily<'a, E: 'a> {
+    phantom: PhantomData<&'a E>,
 }
-impl<E: 'static> Family for ResultFamily<E> {
-    type Member<'a, T: 'a> = Result<T, E>;
+impl<'a, E: 'a> Family<'a> for ResultFamily<'a, E> {
+    type Member<T: 'a> = Result<T, E>;
 }
-impl<'a, E: 'static, A: 'a> Mirror<'a, A> for Result<A, E> {
-    type Family = ResultFamily<E>;
+impl<'a, A: 'a, E: 'a> Mirror<'a, A> for Result<A, E> {
+    type Family = ResultFamily<'a, E>;
 
-    fn as_member(self) -> <Self::Family as Family>::Member<'a, A> {
+    fn as_member(self) -> <Self::Family as Family<'a>>::Member<A> {
         self
     }
 }
-impl<E: 'static> Functor for ResultFamily<E> {
-    fn fmap<'a, A: 'a, B: 'a, F: FnMut(A) -> B + 'a>(
-        fa: Result<A, E>,
-        f: F,
-    ) -> Result<B, E> {
-        fa.map(f)
-    }
-}
-impl<E: 'static> Applicative for ResultFamily<E> {
-    fn pure<'a, A: 'a>(a: A) -> Result<A, E> {
-        Ok(a)
-    }
+// impl<E: 'static> Functor for ResultFamily<E> {
+//     fn fmap<'a, A: 'a, B: 'a, F: FnMut(A) -> B + 'a>(
+//         fa: Result<A, E>,
+//         f: F,
+//     ) -> Result<B, E> {
+//         fa.map(f)
+//     }
+// }
+// impl<E: 'static> Applicative for ResultFamily<E> {
+//     fn pure<'a, A: 'a>(a: A) -> Result<A, E> {
+//         Ok(a)
+//     }
 
-    fn zip<'a, A: 'a, B: 'a>(
-        fa: Result<A, E>,
-        fb: Result<B, E>,
-    ) -> Result<(A, B), E> {
-        fa.and_then(|a| fb.map(|b| (a, b)))
-    }
-}
+//     fn zip<'a, A: 'a, B: 'a>(
+//         fa: Result<A, E>,
+//         fb: Result<B, E>,
+//     ) -> Result<(A, B), E> {
+//         fa.and_then(|a| fb.map(|b| (a, b)))
+//     }
+// }
 
 struct IteratorWrap<'a, T: Sized>(Box<dyn Iterator<Item = T> + 'a>);
 trait IteratorSyntax<'a, T>: Iterator<Item = T> + Sized + 'a {
@@ -145,30 +142,30 @@ impl<'a, T> Iterator for IteratorWrap<'a, T> {
 
 // iterator
 struct IteratorWrapFamily;
-impl Family for IteratorWrapFamily {
-    type Member<'a, T: 'a> = IteratorWrap<'a, T>;
+impl<'a> Family<'a> for IteratorWrapFamily {
+    type Member<T: 'a> = IteratorWrap<'a, T>;
 }
 impl<'a, T: 'a> Mirror<'a, T> for IteratorWrap<'a, T> {
     type Family = IteratorWrapFamily;
 
-    fn as_member(self) -> <Self::Family as Family>::Member<'a, T> {
+    fn as_member(self) -> <Self::Family as Family<'a>>::Member<T> {
         self
     }
 }
-impl Functor for IteratorWrapFamily {
-    fn fmap<'a, A: 'a, B: 'a, F: FnMut(A) -> B + 'a>(
+impl<'a> Functor<'a> for IteratorWrapFamily {
+    fn fmap<A: 'a, B, F: FnMut(A) -> B + 'a>(
         fa: IteratorWrap<'a, A>,
         f: F,
     ) -> IteratorWrap<'a, B> {
         IteratorWrap(Box::new(fa.0.into_iter().map(f).into_iter()))
     }
 }
-impl Applicative for IteratorWrapFamily {
-    fn pure<'a, A: 'a>(a: A) -> IteratorWrap<'a, A> {
+impl<'a> Applicative<'a> for IteratorWrapFamily {
+    fn pure<A: 'a>(a: A) -> IteratorWrap<'a, A> {
         vec![a].into_iter().wrap()
     }
 
-    fn zip<'a, A: 'a, B: 'a>(
+    fn zip<A: 'a, B: 'a>(
         fa: IteratorWrap<A>,
         fb: IteratorWrap<B>,
     ) -> IteratorWrap<'a, (A, B)> {
@@ -182,10 +179,10 @@ impl Applicative for IteratorWrapFamily {
     }
 }
 
-fn use_applicative<'a, A: 'a, F: Applicative>(
+fn use_applicative<'a, A: 'a, F: Applicative<'a>>(
     a: A,
     b: A,
-) -> F::Member<'a, (A, A)> {
+) -> F::Member<(A, A)> {
     let fa = pure::<F, _>(a);
     let fb = pure::<F, _>(b);
     fa.zip(fb)
