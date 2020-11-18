@@ -380,6 +380,46 @@ fn borrowed<'a, A, B>(
     pure::<OptionFamily, _>((a, b))
 }
 
+//
+struct OptionTFamily<'a, F> {
+    phantom: PhantomData<&'a F>,
+}
+struct OptionT<'a, F: Family<'a>, A: 'a> {
+    run:      F::Member<Option<A>>,
+    _phantom: PhantomData<A>,
+}
+impl<'a, F: Family<'a>, A: 'a> OptionT<'a, F, A> {
+    fn of(value: F::Member<Option<A>>) -> Self {
+        OptionT {
+            run:      value,
+            _phantom: PhantomData,
+        }
+    }
+
+    fn run(self) -> F::Member<Option<A>> {
+        self.run
+    }
+}
+
+impl<'a, F: Family<'a>> Family<'a> for OptionTFamily<'a, F> {
+    type Member<T: 'a> = OptionT<'a, F, T>;
+}
+impl<'a, F: Family<'a> + 'a, A: 'a> Mirror<'a, A> for OptionT<'a, F, A> {
+    type Family = OptionTFamily<'a, F>;
+
+    fn as_member(self) -> <Self::Family as Family<'a>>::Member<A> {
+        self
+    }
+}
+impl<'a, M: Functor<'a>> Functor<'a> for OptionTFamily<'a, M> {
+    fn fmap<A: 'a, B: 'a, F: FnMut(A) -> B + 'a>(
+        fa: OptionT<'a, M, A>,
+        mut f: F,
+    ) -> OptionT<'a, M, B> {
+        OptionT::of(fa.run().fmap(move |x| x.fmap(|y| f(y))))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
