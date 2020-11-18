@@ -29,5 +29,8 @@
     "ch17/blog-2/Cargo.toml",
     "ch18/chapter/Cargo.toml",
     "ch19/chapter/Cargo.toml"
-  ]
+  ],
+  "files.watcherExclude": {
+    "**/target": true
+  }
 }

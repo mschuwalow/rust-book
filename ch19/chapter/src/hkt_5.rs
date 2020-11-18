@@ -62,6 +62,26 @@ impl<'a, A: 'a, F: Applicative<'a>, T: Mirror<'a, A, Family = F>>
     ApplicativeSyntax<'a, A, F> for T
 {
 }
+trait Monad<'a>: Applicative<'a> {
+    fn bind<A: 'a, B: 'a, F: FnMut(A) -> Self::Member<B>>(
+        fa: Self::Member<A>,
+        f: F,
+    ) -> Self::Member<B>;
+}
+trait MonadSyntax<'a, A: 'a, Fam: Monad<'a>>:
+    Mirror<'a, A, Family = Fam> + Sized
+{
+    fn bind<B: 'a, F: FnMut(A) -> Fam::Member<B>>(
+        self,
+        f: F,
+    ) -> Fam::Member<B> {
+        Fam::bind(self.as_member(), f)
+    }
+}
+impl<'a, A: 'a, F: Monad<'a>, T: Mirror<'a, A, Family = F>>
+    MonadSyntax<'a, A, F> for T
+{
+}
 
 trait Foldable<'a>: Family<'a> {
     fn fold_map<A: 'a, M: Monoid + 'a, F: FnMut(A) -> M + 'a>(
@@ -145,9 +165,8 @@ impl<'a> Applicative<'a> for OptionFamily {
 impl<'a> Foldable<'a> for OptionFamily {
     fn fold_map<A: 'a, M: Monoid + 'a, F: FnMut(A) -> M + 'a>(
         fa: Option<A>,
-        f: F,
+        mut f: F,
     ) -> M {
-        let mut f = f;
         match fa {
             Some(a) => f(a),
             None => M::empty(),
@@ -163,9 +182,8 @@ impl<'a> Traversable<'a> for OptionFamily {
         F: FnMut(A) -> C + 'a,
     >(
         fa: Option<A>,
-        f: F,
+        mut f: F,
     ) -> App::Member<Option<B>> {
-        let mut f = f;
         match fa {
             None => App::pure(None),
             Some(a) => f(a).fmap(|x| Some(x)),
@@ -205,13 +223,26 @@ impl<'a> Applicative<'a> for VectorFamily {
         result
     }
 }
+impl<'a> Monad<'a> for VectorFamily {
+    fn bind<A: 'a, B: 'a, F: FnMut(A) -> Vec<B>>(
+        fa: Vec<A>,
+        mut f: F,
+    ) -> Vec<B> {
+        let mut result = Vec::new();
+        for a in fa {
+            for b in f(a) {
+                result.push(b);
+            }
+        }
+        result
+    }
+}
 impl<'a> Foldable<'a> for VectorFamily {
     fn fold_map<A: 'a, M: Monoid + 'a, F: FnMut(A) -> M + 'a>(
         fa: Vec<A>,
-        f: F,
+        mut f: F,
     ) -> M {
         let iter = fa.into_iter();
-        let mut f = f;
         iter.fold(M::empty(), move |m, a| M::combine(m, f(a)))
     }
 }
@@ -224,10 +255,9 @@ impl<'a> Traversable<'a> for VectorFamily {
         F: FnMut(A) -> C + 'a,
     >(
         fa: Vec<A>,
-        f: F,
+        mut f: F,
     ) -> App::Member<Vec<B>> {
         let iter = fa.into_iter();
-        let mut f = f;
         let acc: Vec<B> = Vec::new();
         iter.fold(App::pure(acc), move |xs, x| {
             let next = f(x);
@@ -310,12 +340,10 @@ impl<'a> Applicative<'a> for IteratorWrapFamily {
     }
 
     fn zip<A: 'a, B: 'a>(
-        fa: IteratorWrap<A>,
-        fb: IteratorWrap<B>,
+        mut fa: IteratorWrap<A>,
+        mut fb: IteratorWrap<B>,
     ) -> IteratorWrap<'a, (A, B)> {
         let mut result = Vec::new();
-        let mut fa = fa;
-        let mut fb = fb;
         while let (Some(a), Some(b)) = (fa.next(), fb.next()) {
             result.push((a, b));
         }
@@ -359,5 +387,10 @@ mod tests {
     fn test_traverse() {
         let a = vec![1, 2, 3].traverse(|x| Some(x));
         assert_eq!(a, Some(vec![1, 2, 3]));
+    }
+    #[test]
+    fn test_bind() {
+        let a = vec![1, 2, 3].bind(move |x| vec![x, x]);
+        assert_eq!(a, vec![1, 1, 2, 2, 3, 3])
     }
 }
