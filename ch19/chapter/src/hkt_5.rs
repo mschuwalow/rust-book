@@ -9,15 +9,14 @@ trait Monoid: Semigroup {
 }
 
 // hkt
-
 trait Family<'a> {
-    type Member<T: 'a>: Mirror<'a, T, Family = Self> + 'a;
+    type Member<T: 'a>: Mirror<'a, T = T, Family = Self>;
 }
-trait Mirror<'a, T> {
+trait Mirror<'a>: 'a {
+    type T: 'a;
     type Family: Family<'a>;
-    fn as_member(self) -> <Self::Family as Family<'a>>::Member<T>;
+    fn as_member(self) -> <Self::Family as Family<'a>>::Member<Self::T>;
 }
-
 trait Functor<'a>: Family<'a> {
     fn fmap<A: 'a, B: 'a, F: FnMut(A) -> B + 'a>(
         fa: Self::Member<A>,
@@ -25,18 +24,15 @@ trait Functor<'a>: Family<'a> {
     ) -> Self::Member<B>;
 }
 
-trait FunctorSyntax<'a, A: 'a, Fam: Functor<'a>>:
-    Mirror<'a, A, Family = Fam> + Sized
+trait FunctorSyntax<'a, Fam: Functor<'a>>:
+    Mirror<'a, Family = Fam> + Sized
 {
-    fn fmap<B, F: FnMut(A) -> B + 'a>(self, f: F) -> Fam::Member<B> {
+    fn fmap<B, F: FnMut(Self::T) -> B + 'a>(self, f: F) -> Fam::Member<B> {
         Fam::fmap(self.as_member(), f)
     }
 }
 
-impl<'a, A: 'a, F: Functor<'a>, T: Mirror<'a, A, Family = F>>
-    FunctorSyntax<'a, A, F> for T
-{
-}
+impl<'a, F: Functor<'a>, T: Mirror<'a, Family = F>> FunctorSyntax<'a, F> for T {}
 
 trait Applicative<'a>: Functor<'a> {
     fn pure<A: 'a>(a: A) -> Self::Member<A>;
@@ -50,16 +46,16 @@ fn pure<'a, F: Applicative<'a>, A: 'a>(a: A) -> F::Member<A> {
     F::pure(a)
 }
 
-trait ApplicativeSyntax<'a, A: 'a, Fam: Applicative<'a>>:
-    Mirror<'a, A, Family = Fam> + Sized
+trait ApplicativeSyntax<'a, App: Applicative<'a>>:
+    Mirror<'a, Family = App> + Sized
 {
-    fn zip<B: 'a>(self, fb: Fam::Member<B>) -> Fam::Member<(A, B)> {
-        Fam::zip(self.as_member(), fb)
+    fn zip<B: 'a>(self, fb: App::Member<B>) -> App::Member<(Self::T, B)> {
+        App::zip(self.as_member(), fb)
     }
 }
 
-impl<'a, A: 'a, F: Applicative<'a>, T: Mirror<'a, A, Family = F>>
-    ApplicativeSyntax<'a, A, F> for T
+impl<'a, App: Applicative<'a>, T: Mirror<'a, Family = App>>
+    ApplicativeSyntax<'a, App> for T
 {
 }
 trait Monad<'a>: Applicative<'a> {
@@ -68,20 +64,15 @@ trait Monad<'a>: Applicative<'a> {
         f: F,
     ) -> Self::Member<B>;
 }
-trait MonadSyntax<'a, A: 'a, Fam: Monad<'a>>:
-    Mirror<'a, A, Family = Fam> + Sized
-{
-    fn bind<B: 'a, F: FnMut(A) -> Fam::Member<B>>(
+trait MonadSyntax<'a, Mon: Monad<'a>>: Mirror<'a, Family = Mon> + Sized {
+    fn bind<B: 'a, F: FnMut(Self::T) -> Mon::Member<B>>(
         self,
         f: F,
-    ) -> Fam::Member<B> {
-        Fam::bind(self.as_member(), f)
+    ) -> Mon::Member<B> {
+        Mon::bind(self.as_member(), f)
     }
 }
-impl<'a, A: 'a, F: Monad<'a>, T: Mirror<'a, A, Family = F>>
-    MonadSyntax<'a, A, F> for T
-{
-}
+impl<'a, F: Monad<'a>, T: Mirror<'a, Family = F>> MonadSyntax<'a, F> for T {}
 
 trait Foldable<'a>: Family<'a> {
     fn fold_map<A: 'a, M: Monoid + 'a, F: FnMut(A) -> M + 'a>(
@@ -89,15 +80,15 @@ trait Foldable<'a>: Family<'a> {
         f: F,
     ) -> M;
 }
-trait FoldableSyntax<'a, A: 'a, Fam: Foldable<'a>>:
-    Mirror<'a, A, Family = Fam> + Sized
+trait FoldableSyntax<'a, Fam: Foldable<'a>>:
+    Mirror<'a, Family = Fam> + Sized
 {
-    fn fold_map<M: Monoid + 'a, F: FnMut(A) -> M + 'a>(self, f: F) -> M {
+    fn fold_map<M: Monoid + 'a, F: FnMut(Self::T) -> M + 'a>(self, f: F) -> M {
         Fam::fold_map(self.as_member(), f)
     }
 }
-impl<'a, A: 'a, F: Foldable<'a>, T: Mirror<'a, A, Family = F>>
-    FoldableSyntax<'a, A, F> for T
+impl<'a, F: Foldable<'a>, T: Mirror<'a, Family = F>> FoldableSyntax<'a, F>
+    for T
 {
 }
 
@@ -105,31 +96,51 @@ trait Traversable<'a>: Foldable<'a> {
     fn traverse<
         App: Applicative<'a>,
         A: 'a,
-        B: 'a,
-        C: Mirror<'a, B, Family = App>,
-        F: FnMut(A) -> C + 'a,
+        AppB: Mirror<'a, Family = App>,
+        F: FnMut(A) -> AppB + 'a,
     >(
         fa: Self::Member<A>,
         f: F,
-    ) -> App::Member<Self::Member<B>>;
+    ) -> App::Member<Self::Member<AppB::T>>;
 }
-trait TraversableSyntax<'a, A: 'a, Fam: Traversable<'a>>:
-    Mirror<'a, A, Family = Fam> + Sized
+trait TraversableSyntax<'a, Tr: Traversable<'a>>:
+    Mirror<'a, Family = Tr> + Sized
 {
     fn traverse<
         App: Applicative<'a>,
         B: 'a,
-        C: Mirror<'a, B, Family = App>,
-        F: FnMut(A) -> C + 'a,
+        AppB: Mirror<'a, T = B, Family = App>,
+        F: FnMut(Self::T) -> AppB + 'a,
     >(
         self,
         f: F,
-    ) -> App::Member<Fam::Member<B>> {
-        Fam::traverse(self.as_member(), f)
+    ) -> App::Member<Tr::Member<B>> {
+        Tr::traverse(self.as_member(), f)
     }
 }
-impl<'a, A: 'a, F: Traversable<'a>, T: Mirror<'a, A, Family = F>>
-    TraversableSyntax<'a, A, F> for T
+impl<'a, F: Traversable<'a>, T: Mirror<'a, Family = F>> TraversableSyntax<'a, F>
+    for T
+{
+}
+
+trait SequenceSyntax<
+    'a,
+    App: Applicative<'a>,
+    Tr: Traversable<'a>,
+    AppA: Mirror<'a, Family = App>,
+>: Mirror<'a, T = AppA, Family = Tr> + Sized
+{
+    fn sequence(self) -> App::Member<Tr::Member<AppA::T>> {
+        self.as_member().traverse(|x| x.as_member())
+    }
+}
+impl<
+        'a,
+        App: Applicative<'a>,
+        Tr: Traversable<'a>,
+        AppA: Mirror<'a, Family = App>,
+        TrAppA: Mirror<'a, T = AppA, Family = Tr>,
+    > SequenceSyntax<'a, App, Tr, AppA> for TrAppA
 {
 }
 // usage
@@ -138,8 +149,9 @@ struct OptionFamily;
 impl<'a> Family<'a> for OptionFamily {
     type Member<T: 'a> = Option<T>;
 }
-impl<'a, A: 'a> Mirror<'a, A> for Option<A> {
+impl<'a, A: 'a> Mirror<'a> for Option<A> {
     type Family = OptionFamily;
+    type T = A;
 
     fn as_member(self) -> Option<A> {
         self
@@ -177,13 +189,12 @@ impl<'a> Traversable<'a> for OptionFamily {
     fn traverse<
         App: Applicative<'a>,
         A: 'a,
-        B: 'a,
-        C: Mirror<'a, B, Family = App>,
-        F: FnMut(A) -> C + 'a,
+        AppB: Mirror<'a, Family = App>,
+        F: FnMut(A) -> AppB + 'a,
     >(
         fa: Option<A>,
         mut f: F,
-    ) -> App::Member<Option<B>> {
+    ) -> App::Member<Option<AppB::T>> {
         match fa {
             None => App::pure(None),
             Some(a) => f(a).fmap(|x| Some(x)),
@@ -196,8 +207,9 @@ struct VectorFamily;
 impl<'a> Family<'a> for VectorFamily {
     type Member<T: 'a> = Vec<T>;
 }
-impl<'a, A: 'a> Mirror<'a, A> for Vec<A> {
+impl<'a, A: 'a> Mirror<'a> for Vec<A> {
     type Family = VectorFamily;
+    type T = A;
 
     fn as_member(self) -> <Self::Family as Family<'a>>::Member<A> {
         self
@@ -250,15 +262,14 @@ impl<'a> Traversable<'a> for VectorFamily {
     fn traverse<
         App: Applicative<'a>,
         A: 'a,
-        B: 'a,
-        C: Mirror<'a, B, Family = App>,
-        F: FnMut(A) -> C + 'a,
+        AppB: Mirror<'a, Family = App>,
+        F: FnMut(A) -> AppB + 'a,
     >(
         fa: Vec<A>,
         mut f: F,
-    ) -> App::Member<Vec<B>> {
+    ) -> App::Member<Vec<AppB::T>> {
         let iter = fa.into_iter();
-        let acc: Vec<B> = Vec::new();
+        let acc = Vec::new();
         iter.fold(App::pure(acc), move |xs, x| {
             let next = f(x);
             xs.zip(next.as_member()).fmap(move |(mut xs, x)| {
@@ -276,8 +287,9 @@ struct ResultFamily<'a, E: 'a> {
 impl<'a, E: 'a> Family<'a> for ResultFamily<'a, E> {
     type Member<T: 'a> = Result<T, E>;
 }
-impl<'a, A: 'a, E: 'a> Mirror<'a, A> for Result<A, E> {
+impl<'a, A: 'a, E: 'a> Mirror<'a> for Result<A, E> {
     type Family = ResultFamily<'a, E>;
+    type T = A;
 
     fn as_member(self) -> <Self::Family as Family<'a>>::Member<A> {
         self
@@ -319,10 +331,11 @@ struct IteratorWrapFamily;
 impl<'a> Family<'a> for IteratorWrapFamily {
     type Member<T: 'a> = IteratorWrap<'a, T>;
 }
-impl<'a, T: 'a> Mirror<'a, T> for IteratorWrap<'a, T> {
+impl<'a, A: 'a> Mirror<'a> for IteratorWrap<'a, A> {
     type Family = IteratorWrapFamily;
+    type T = A;
 
-    fn as_member(self) -> <Self::Family as Family<'a>>::Member<T> {
+    fn as_member(self) -> <Self::Family as Family<'a>>::Member<A> {
         self
     }
 }
@@ -351,35 +364,6 @@ impl<'a> Applicative<'a> for IteratorWrapFamily {
     }
 }
 
-fn use_applicative<'a, A, F: Applicative<'a>>(a: A, b: A) -> F::Member<(A, A)> {
-    let fa = pure::<F, _>(a);
-    let fb = pure::<F, _>(b);
-    fa.zip(fb)
-}
-
-fn foo() -> Option<(i32, i32)> {
-    let a = Some(3);
-    let b = a.fmap(|x| (x + 1, x));
-    b
-}
-
-fn use_iterator() -> IteratorWrap<'static, i32> {
-    let v = vec![1];
-    v.into_iter().wrap().fmap(|x| x + 1).fmap(|x| x + 1)
-}
-
-struct Foo<'a, A> {
-    a: A,
-    b: &'a i32,
-}
-
-fn borrowed<'a, A, B>(
-    a: Foo<'a, A>,
-    b: Foo<'a, B>,
-) -> Option<(Foo<'a, A>, Foo<'a, B>)> {
-    pure::<OptionFamily, _>((a, b))
-}
-
 //
 struct OptionTFamily<'a, F> {
     phantom: PhantomData<&'a F>,
@@ -404,8 +388,9 @@ impl<'a, F: Family<'a>, A: 'a> OptionT<'a, F, A> {
 impl<'a, F: Family<'a>> Family<'a> for OptionTFamily<'a, F> {
     type Member<T: 'a> = OptionT<'a, F, T>;
 }
-impl<'a, F: Family<'a> + 'a, A: 'a> Mirror<'a, A> for OptionT<'a, F, A> {
+impl<'a, F: Family<'a> + 'a, A: 'a> Mirror<'a> for OptionT<'a, F, A> {
     type Family = OptionTFamily<'a, F>;
+    type T = A;
 
     fn as_member(self) -> <Self::Family as Family<'a>>::Member<A> {
         self
@@ -427,6 +412,11 @@ mod tests {
     fn test_traverse() {
         let a = vec![1, 2, 3].traverse(|x| Some(x));
         assert_eq!(a, Some(vec![1, 2, 3]));
+    }
+    #[test]
+    fn test_sequence() {
+        let a = vec![Some(1), None, Some(3)].sequence();
+        assert_eq!(a, None);
     }
     #[test]
     fn test_bind() {

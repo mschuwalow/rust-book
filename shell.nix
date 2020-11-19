@@ -7,5 +7,5 @@ let
   pkgs = import sources.nixpkgs { };
 in pkgs.mkShell {
   buildInputs = [ rustWithExtensions ]
-    ++ (with pkgs; [ cargo-edit cargo-watch gnumake nixfmt ]);
+    ++ (with pkgs; [ cargo-edit cargo-watch cargo-inspect gnumake nixfmt ]);
 }
