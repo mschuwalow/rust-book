@@ -1,27 +1,28 @@
-use hello::ThreadPool;
 use std::{
     fs::File,
     io::prelude::*,
-    net::{TcpListener, TcpStream},
     thread,
     time::Duration,
 };
+use async_std::{net::*, prelude::*};
+use async_std::task;
 
-fn main() {
-    let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
-    let pool = ThreadPool::new(4);
-    for stream in listener.incoming() {
+#[async_std::main]
+async fn main() {
+    let listener = TcpListener::bind("127.0.0.1:7878").await.unwrap();
+    let mut incoming = listener.incoming();
+    while let Some(stream) = incoming.next().await {
         let stream = stream.unwrap();
-        pool.execute(|| {
-            handle_connection(stream);
+        println!("Accepting from: {}", stream.peer_addr().unwrap());
+        task::spawn(async move {
+            handle_connection(stream).await
         });
-        println!("Connection established");
     }
 }
 
-fn handle_connection(mut stream: TcpStream) {
+async fn handle_connection(mut stream: TcpStream) {
     let mut buffer = [0; 512];
-    stream.read(&mut buffer).unwrap();
+    stream.read(&mut buffer).await.unwrap();
 
     let get = b"GET / HTTP/1.1\r\n";
     let sleep = b"GET /sleep HTTP/1.1\r\n";
@@ -40,6 +41,6 @@ fn handle_connection(mut stream: TcpStream) {
     file.read_to_string(&mut contents).unwrap();
 
     let response = format!("{}{}", status_line, contents);
-    stream.write(response.as_bytes()).unwrap();
-    stream.flush().unwrap();
+    stream.write(response.as_bytes()).await.unwrap();
+    stream.flush().await.unwrap();
 }
